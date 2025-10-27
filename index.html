@@ -71,57 +71,68 @@
   </form>
 
   <script>
-    // ضع هنا رابط Google Apps Script الذي أنشأته
     const scriptURL = "https://script.google.com/macros/s/AKfycbxwFqq0-MTzcgeASrem2zsfhina1EwnW9M41EpT26xXp8Q9tMUycIfTlMzgUC8PT74PdQ/exec"; 
 
     document.getElementById("studentForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const data = {
-        name: document.getElementById("name").value,
-        studentID: document.getElementById("studentID").value,
-        telegramPhone: document.getElementById("telegramPhone").value,
-        telegramUser: document.getElementById("telegramUser").value,
-        email: document.getElementById("email").value,
+        name: document.getElementById("name").value.trim(),
+        studentID: document.getElementById("studentID").value.trim(),
+        telegramPhone: document.getElementById("telegramPhone").value.trim(),
+        telegramUser: document.getElementById("telegramUser").value.trim(),
+        email: document.getElementById("email").value.trim(),
         department: document.getElementById("department").value,
-        year: document.getElementById("year").value,
+        year: document.getElementById("year").value
       };
 
-      // إرسال البيانات إلى Google Sheets عبر API
-      await fetch(scriptURL, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      try {
+        // إرسال البيانات وانتظار الرد
+        const response = await fetch(scriptURL, {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: { "Content-Type": "application/json" }
+        });
 
-      // روابط مجموعات التلغرام لكل قسم وسنة
-      const telegramLinks = {
-        "العمارة": {
-          "الأولى": "https://t.me/+-9YyfrTi02RkZGM8",
-          "الثانية": "https://t.me/+mCTlUfoK2nc4NjE0"
-        },
-        "المساحة": {
-          "الأولى": "https://t.me/+dCHlpX3rWacyY2Zk",
-          "الثانية": "https://t.me/+bqNv7qTvSZxiN2Nk"
-        },
-        "الإنشاءات": {
-          "الأولى": "https://t.me/+giuMhy3-cddiOTJk",
-          "الثانية": "https://t.me/+lJWLUMGhr7BmMWU0"
-        },
-        "الصحية والمائية": {
-          "الأولى": "https://t.me/+B6h00TerdAVhODU0",
-          "الثانية": "https://t.me/+rCAoFKCxPDAyMzBk"
+        const result = await response.json();
+
+        if (result.status === "success") {
+          // روابط مجموعات التلغرام لكل قسم وسنة
+          const telegramLinks = {
+            "العمارة": {
+              "الأولى": "https://t.me/+-9YyfrTi02RkZGM8",
+              "الثانية": "https://t.me/+mCTlUfoK2nc4NjE0"
+            },
+            "المساحة": {
+              "الأولى": "https://t.me/+dCHlpX3rWacyY2Zk",
+              "الثانية": "https://t.me/+bqNv7qTvSZxiN2Nk"
+            },
+            "الإنشاءات": {
+              "الأولى": "https://t.me/+giuMhy3-cddiOTJk",
+              "الثانية": "https://t.me/+lJWLUMGhr7BmMWU0"
+            },
+            "الصحية والمائية": {
+              "الأولى": "https://t.me/+B6h00TerdAVhODU0",
+              "الثانية": "https://t.me/+rCAoFKCxPDAyMzBk"
+            }
+          };
+
+          const department = data.department;
+          const year = data.year;
+          const redirectLink = telegramLinks[department]?.[year];
+
+          if (redirectLink) {
+            alert("✅ تم حفظ بياناتك بنجاح! سيتم تحويلك إلى مجموعة قسمك على التلغرام الآن...");
+            window.location.href = redirectLink;
+          } else {
+            alert("✅ تم حفظ بياناتك بنجاح، لكن لم يتم العثور على مجموعة تلغرام مطابقة.");
+          }
+        } else {
+          alert("❌ حدث خطأ أثناء الحفظ، يرجى المحاولة لاحقًا.");
         }
-      };
-
-      const department = data.department;
-      const year = data.year;
-
-      // تحويل الطالب حسب قسمه وسنته
-      const redirectLink = telegramLinks[department]?.[year];
-      if (redirectLink) {
-        window.location.href = redirectLink;
-      } else {
-        alert("تم حفظ البيانات بنجاح ✅");
+      } catch (error) {
+        console.error("Error:", error);
+        alert("⚠️ حدث خطأ في الاتصال بالخادم. تحقق من الاتصال أو أعد المحاولة.");
       }
     });
   </script>
