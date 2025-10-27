@@ -72,8 +72,8 @@
     <input type="text" id="name" placeholder="الاسم الثلاثي" required>
     <input type="text" id="studentID" placeholder="الرقم الجامعي" required>
     <input type="tel" id="telegramPhone" placeholder="رقم موبايل التلغرام" required>
-    <input type="text" id="telegramUser" placeholder="يوزر التلغرام (اختياري)">
-    <input type="email" id="email" placeholder="البريد الإلكتروني (اختياري)">
+    <input type="text" id="telegramUser" placeholder="يوزر التلغرام ">
+    <input type="email" id="email" placeholder="البريد الإلكتروني">
     
     <select id="department" required>
       <option value="">اختر القسم</option>
@@ -93,16 +93,34 @@
   </form>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbygWpw_9UauECskV_USZ2T_rC1kJR9p8cUYXzqDSaPv8A9r5uO9Gp2k-Ve13Xs3QQFWPg/exec"; 
+    // ضع هنا رابط Google Apps Script الذي نشرته بصيغة Web App
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzTYQ0RBb5Qvpsb9p-Re5J1agHU5_kC2HQ3l2AECQ7yvATMMq7PO5KkCFne4qUmVDPo9A/exec"; 
 
     const form = document.getElementById("studentForm");
     const loading = document.getElementById("loading");
     const submitBtn = document.getElementById("submitBtn");
 
+    const telegramLinks = {
+      "العمارة": {
+        "الأولى": "https://t.me/+-9YyfrTi02RkZGM8",
+        "الثانية": "https://t.me/+mCTlUfoK2nc4NjE0"
+      },
+      "المساحة": {
+        "الأولى": "https://t.me/+dCHlpX3rWacyY2Zk",
+        "الثانية": "https://t.me/+bqNv7qTvSZxiN2Nk"
+      },
+      "الإنشاءات": {
+        "الأولى": "https://t.me/+giuMhy3-cddiOTJk",
+        "الثانية": "https://t.me/+lJWLUMGhr7BmMWU0"
+      },
+      "الصحية والمائية": {
+        "الأولى": "https://t.me/+B6h00TerdAVhODU0",
+        "الثانية": "https://t.me/+rCAoFKCxPDAyMzBk"
+      }
+    };
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-
-      // عرض شريط التحميل
       loading.style.display = "flex";
       submitBtn.disabled = true;
 
@@ -125,56 +143,32 @@
         });
 
         const text = await response.text();
-        console.log("Raw response:", text);
-
         let result;
         try {
           result = JSON.parse(text);
         } catch {
-          result = { status: "success" }; // احتياطي
+          result = { status: "success" };
         }
 
         loading.style.display = "none";
         submitBtn.disabled = false;
 
         if (result.status === "success") {
-          const telegramLinks = {
-            "العمارة": {
-              "الأولى": "https://t.me/+-9YyfrTi02RkZGM8",
-              "الثانية": "https://t.me/+mCTlUfoK2nc4NjE0"
-            },
-            "المساحة": {
-              "الأولى": "https://t.me/+dCHlpX3rWacyY2Zk",
-              "الثانية": "https://t.me/+bqNv7qTvSZxiN2Nk"
-            },
-            "الإنشاءات": {
-              "الأولى": "https://t.me/+giuMhy3-cddiOTJk",
-              "الثانية": "https://t.me/+lJWLUMGhr7BmMWU0"
-            },
-            "الصحية والمائية": {
-              "الأولى": "https://t.me/+B6h00TerdAVhODU0",
-              "الثانية": "https://t.me/+rCAoFKCxPDAyMzBk"
-            }
-          };
-
           const redirectLink = telegramLinks[data.department]?.[data.year];
           alert("✅ تم حفظ بياناتك بنجاح! سيتم تحويلك خلال ثانيتين...");
-
           setTimeout(() => {
-            if (redirectLink) {
-              window.location.href = redirectLink;
-            } else {
-              alert("⚠️ لم يتم العثور على مجموعة تلغرام مطابقة لهذا القسم والسنة.");
-            }
+            if (redirectLink) window.location.href = redirectLink;
+            else alert("⚠️ لم يتم العثور على مجموعة تلغرام مطابقة لهذا القسم والسنة.");
           }, 2000);
         } else {
           alert("❌ حدث خطأ أثناء الحفظ، يرجى المحاولة لاحقًا.");
         }
+
       } catch (error) {
         loading.style.display = "none";
         submitBtn.disabled = false;
         console.error("Error:", error);
-        alert("⚠️ حدث خطأ في الاتصال بالخادم. تحقق من الاتصال أو أعد المحاولة.");
+        alert("⚠️ حدث خطأ في الاتصال بالخادم. تحقق من الرابط أو أعد المحاولة.");
       }
     });
   </script>
