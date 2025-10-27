@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تسجيل طلاب المعهد التقاني الهندسي</title>
+  <style>
+    body {
+      font-family: "Cairo", sans-serif;
+      background: #f0f2f5;
+      direction: rtl;
+      text-align: center;
+      padding: 30px;
+    }
+    form {
+      background: #fff;
+      padding: 25px;
+      max-width: 420px;
+      margin: auto;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+    button:hover { background: #0056b3; }
+    h2 { color: #333; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+  <h2>📋 استمارة تسجيل طلاب المعهد التقاني الهندسي في المجموعات الرسمية</h2>
+  
+  <form id="studentForm">
+    <input type="text" id="name" placeholder="الاسم الثلاثي" required>
+    <input type="text" id="studentID" placeholder="الرقم الجامعي" required>
+    <input type="tel" id="telegramPhone" placeholder="رقم موبايل التلغرام" required>
+    <input type="text" id="telegramUser" placeholder="يوزر التلغرام (اختياري)">
+    <input type="email" id="email" placeholder="البريد الإلكتروني (اختياري)">
+    
+    <select id="department" required>
+      <option value="">اختر القسم</option>
+      <option value="العمارة">العمارة</option>
+      <option value="المساحة">المساحة</option>
+      <option value="الإنشاءات">الإنشاءات</option>
+      <option value="الصحية والمائية">الصحية والمائية</option>
+    </select>
+
+    <select id="year" required>
+      <option value="">اختر السنة الدراسية</option>
+      <option value="الأولى">الأولى</option>
+      <option value="الثانية">الثانية</option>
+    </select>
+
+    <button type="submit">التالي ➜</button>
+  </form>
+
+  <script>
+    // ضع هنا رابط Google Apps Script الذي أنشأته
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw6cRRMTJ5QMG6QND-Gkm_DyOQ-SGl2az9T5Z2lwnF5V78YGlEhX2QH85Ojk8q84ixi8w/exec"; 
+
+    document.getElementById("studentForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        name: document.getElementById("name").value,
+        studentID: document.getElementById("studentID").value,
+        telegramPhone: document.getElementById("telegramPhone").value,
+        telegramUser: document.getElementById("telegramUser").value,
+        email: document.getElementById("email").value,
+        department: document.getElementById("department").value,
+        year: document.getElementById("year").value,
+      };
+
+      // إرسال البيانات إلى Google Sheets عبر API
+      await fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+
+      // روابط مجموعات التلغرام لكل قسم وسنة
+      const telegramLinks = {
+        "العمارة": {
+          "الأولى": "https://t.me/+-9YyfrTi02RkZGM8",
+          "الثانية": "https://t.me/+mCTlUfoK2nc4NjE0"
+        },
+        "المساحة": {
+          "الأولى": "https://t.me/+dCHlpX3rWacyY2Zk",
+          "الثانية": "https://t.me/+bqNv7qTvSZxiN2Nk"
+        },
+        "الإنشاءات": {
+          "الأولى": "https://t.me/+giuMhy3-cddiOTJk",
+          "الثانية": "https://t.me/+lJWLUMGhr7BmMWU0"
+        },
+        "الصحية والمائية": {
+          "الأولى": "https://t.me/+B6h00TerdAVhODU0",
+          "الثانية": "https://t.me/+rCAoFKCxPDAyMzBk"
+        }
+      };
+
+      const department = data.department;
+      const year = data.year;
+
+      // تحويل الطالب حسب قسمه وسنته
+      const redirectLink = telegramLinks[department]?.[year];
+      if (redirectLink) {
+        window.location.href = redirectLink;
+      } else {
+        alert("تم حفظ البيانات بنجاح ✅");
+      }
+    });
+  </script>
+</body>
+</html>
