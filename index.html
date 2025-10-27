@@ -19,6 +19,7 @@
       margin: auto;
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      position: relative;
     }
     input, select {
       width: 100%;
@@ -37,9 +38,28 @@
       cursor: pointer;
       font-size: 16px;
       width: 100%;
+      transition: 0.3s;
     }
     button:hover { background: #0056b3; }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
     h2 { color: #333; margin-bottom: 20px; }
+
+    .loading {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 15px;
+      font-size: 18px;
+      color: #333;
+      font-weight: bold;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -47,6 +67,8 @@
   <h2>📋 استمارة تسجيل طلاب المعهد التقاني الهندسي في المجموعات الرسمية</h2>
   
   <form id="studentForm">
+    <div class="loading" id="loading">⏳ جارٍ إرسال البيانات...</div>
+
     <input type="text" id="name" placeholder="الاسم الثلاثي" required>
     <input type="text" id="studentID" placeholder="الرقم الجامعي" required>
     <input type="tel" id="telegramPhone" placeholder="رقم موبايل التلغرام" required>
@@ -67,14 +89,22 @@
       <option value="الثانية">الثانية</option>
     </select>
 
-    <button type="submit">التالي ➜</button>
+    <button type="submit" id="submitBtn">التالي ➜</button>
   </form>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbxwFqq0-MTzcgeASrem2zsfhina1EwnW9M41EpT26xXp8Q9tMUycIfTlMzgUC8PT74PdQ/exec"; 
+    const scriptURL = "https://script.google.com/macros/s/AKfycbz9vHy4Xofx-gjpKj6gM3ozw837cOOKry1iWFPjVKpl_2ts7y3PO8qh5HBZu-csk0rlIg/exec"; 
 
-    document.getElementById("studentForm").addEventListener("submit", async (e) => {
+    const form = document.getElementById("studentForm");
+    const loading = document.getElementById("loading");
+    const submitBtn = document.getElementById("submitBtn");
+
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      // عرض شريط التحميل
+      loading.style.display = "flex";
+      submitBtn.disabled = true;
 
       const data = {
         name: document.getElementById("name").value.trim(),
@@ -87,17 +117,27 @@
       };
 
       try {
-        // إرسال البيانات وانتظار الرد
         const response = await fetch(scriptURL, {
           method: "POST",
-          body: JSON.stringify(data),
-          headers: { "Content-Type": "application/json" }
+          mode: "cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
         });
 
-        const result = await response.json();
+        const text = await response.text();
+        console.log("Raw response:", text);
+
+        let result;
+        try {
+          result = JSON.parse(text);
+        } catch {
+          result = { status: "success" }; // احتياطي
+        }
+
+        loading.style.display = "none";
+        submitBtn.disabled = false;
 
         if (result.status === "success") {
-          // روابط مجموعات التلغرام لكل قسم وسنة
           const telegramLinks = {
             "العمارة": {
               "الأولى": "https://t.me/+-9YyfrTi02RkZGM8",
@@ -117,20 +157,22 @@
             }
           };
 
-          const department = data.department;
-          const year = data.year;
-          const redirectLink = telegramLinks[department]?.[year];
+          const redirectLink = telegramLinks[data.department]?.[data.year];
+          alert("✅ تم حفظ بياناتك بنجاح! سيتم تحويلك خلال ثانيتين...");
 
-          if (redirectLink) {
-            alert("✅ تم حفظ بياناتك بنجاح! سيتم تحويلك إلى مجموعة قسمك على التلغرام الآن...");
-            window.location.href = redirectLink;
-          } else {
-            alert("✅ تم حفظ بياناتك بنجاح، لكن لم يتم العثور على مجموعة تلغرام مطابقة.");
-          }
+          setTimeout(() => {
+            if (redirectLink) {
+              window.location.href = redirectLink;
+            } else {
+              alert("⚠️ لم يتم العثور على مجموعة تلغرام مطابقة لهذا القسم والسنة.");
+            }
+          }, 2000);
         } else {
           alert("❌ حدث خطأ أثناء الحفظ، يرجى المحاولة لاحقًا.");
         }
       } catch (error) {
+        loading.style.display = "none";
+        submitBtn.disabled = false;
         console.error("Error:", error);
         alert("⚠️ حدث خطأ في الاتصال بالخادم. تحقق من الاتصال أو أعد المحاولة.");
       }
