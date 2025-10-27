@@ -12,7 +12,7 @@
       text-align: center;
       padding: 30px;
     }
-    form {
+    form, #resultPage {
       background: #fff;
       padding: 25px;
       max-width: 420px;
@@ -60,6 +60,31 @@
       font-weight: bold;
       display: none;
     }
+
+    #resultPage {
+      display: none;
+    }
+
+    .link-box {
+      background: #e9f5ff;
+      border: 1px solid #b3e0ff;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+    .telegram-link {
+      display: inline-block;
+      background: #0088cc;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .telegram-link:hover {
+      background: #007ab8;
+    }
   </style>
 </head>
 <body>
@@ -72,7 +97,7 @@
     <input type="text" id="name" placeholder="الاسم الثلاثي" required>
     <input type="text" id="studentID" placeholder="الرقم الجامعي" required>
     <input type="tel" id="telegramPhone" placeholder="رقم موبايل التلغرام" required>
-    <input type="text" id="telegramUser" placeholder="يوزر التلغرام ">
+    <input type="text" id="telegramUser" placeholder="يوزر التلغرام">
     <input type="email" id="email" placeholder="البريد الإلكتروني">
     
     <select id="department" required>
@@ -92,13 +117,25 @@
     <button type="submit" id="submitBtn">التالي ➜</button>
   </form>
 
+  <!-- صفحة النتيجة -->
+  <div id="resultPage">
+    <h3>✅ تم حفظ بياناتك بنجاح!</h3>
+    <p>اضغط على الرابط أدناه للانضمام إلى مجموعة قسمك في التلغرام 👇</p>
+    <div class="link-box">
+      <a id="telegramGroupLink" class="telegram-link" href="#" target="_blank">الانضمام إلى المجموعة</a>
+    </div>
+    <button onclick="backToForm()">⬅️ العودة إلى الاستمارة</button>
+  </div>
+
   <script>
-    // ضع هنا رابط Google Apps Script الذي نشرته بصيغة Web App
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzTYQ0RBb5Qvpsb9p-Re5J1agHU5_kC2HQ3l2AECQ7yvATMMq7PO5KkCFne4qUmVDPo9A/exec"; 
+    // ✅ ضع هنا رابط Google Apps Script (Web App URL)
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzgek6lwrPDqUrYHE1A2qCyA7pw97gWLBMEAA2LuYbpOoMtsSJYxOsO5ieMHaqnX3NHwA/exec";
 
     const form = document.getElementById("studentForm");
     const loading = document.getElementById("loading");
     const submitBtn = document.getElementById("submitBtn");
+    const resultPage = document.getElementById("resultPage");
+    const telegramGroupLink = document.getElementById("telegramGroupLink");
 
     const telegramLinks = {
       "العمارة": {
@@ -121,6 +158,7 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
       loading.style.display = "flex";
       submitBtn.disabled = true;
 
@@ -137,7 +175,6 @@
       try {
         const response = await fetch(scriptURL, {
           method: "POST",
-          mode: "cors",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
         });
@@ -155,11 +192,13 @@
 
         if (result.status === "success") {
           const redirectLink = telegramLinks[data.department]?.[data.year];
-          alert("✅ تم حفظ بياناتك بنجاح! سيتم تحويلك خلال ثانيتين...");
-          setTimeout(() => {
-            if (redirectLink) window.location.href = redirectLink;
-            else alert("⚠️ لم يتم العثور على مجموعة تلغرام مطابقة لهذا القسم والسنة.");
-          }, 2000);
+          if (redirectLink) {
+            form.style.display = "none";
+            resultPage.style.display = "block";
+            telegramGroupLink.href = redirectLink;
+          } else {
+            alert("⚠️ لم يتم العثور على مجموعة تلغرام مطابقة لهذا القسم والسنة.");
+          }
         } else {
           alert("❌ حدث خطأ أثناء الحفظ، يرجى المحاولة لاحقًا.");
         }
@@ -168,9 +207,15 @@
         loading.style.display = "none";
         submitBtn.disabled = false;
         console.error("Error:", error);
-        alert("⚠️ حدث خطأ في الاتصال بالخادم. تحقق من الرابط أو أعد المحاولة.");
+        alert("⚠️ فشل الاتصال بالخادم. تحقق من إعدادات النشر في Google Apps Script.");
       }
     });
+
+    function backToForm() {
+      resultPage.style.display = "none";
+      form.style.display = "block";
+      form.reset();
+    }
   </script>
 </body>
 </html>
